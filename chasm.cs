@@ -41,10 +41,10 @@ namespace cAlgo.indicators
         ///
 
         [Parameter("LONG Trailing Stop (%)", DefaultValue = 8, MinValue = 1, MaxValue = 50)]
-        public int long_stop { get; set; }
+        public double long_stop { get; set; }
 
         [Parameter("SHORT Trailing Stop (%)", DefaultValue = 4, MinValue = 1, MaxValue = 50)]
-        public int short_stop { get; set; }
+        public double short_stop { get; set; }
 
         [Parameter("Diff Ticks", DefaultValue = 1, MinValue = 1E-07, MaxValue = 1000)]
         public double diffticks { get; set; }
@@ -52,8 +52,11 @@ namespace cAlgo.indicators
         [Parameter("GAP Up Long?", DefaultValue = true)]
         public bool gap_up_mode { get; set; }
 
-        [Parameter("GAP Down Long?", DefaultValue = true)]
+        [Parameter("GAP Down Long?", DefaultValue = false)]
         public bool gap_down_mode { get; set; }
+
+        [Parameter("N. Contracts", DefaultValue = 100, MinValue = 1, MaxValue = 100000)]
+        public int ncontracts { get; set; }
 
         protected override void OnStart()
         {
@@ -73,10 +76,10 @@ namespace cAlgo.indicators
             yesterday_low = MarketSeries.Low[kindex - 1];
 
 
-            Print("Open price is: {0}", today_open);
-            Print("Yesterday Close is: {0}", yesterday_close);
-            Print("Yesterday High is: {0}", yesterday_high);
-            Print("Yesterday Low is: {0}", yesterday_low);
+            //Print("Open price is: {0}", today_open);
+            //Print("Yesterday Close is: {0}", yesterday_close);
+            //Print("Yesterday High is: {0}", yesterday_high);
+            //Print("Yesterday Low is: {0}", yesterday_low);
 
 
             if (today_open > yesterday_close)
@@ -110,24 +113,51 @@ namespace cAlgo.indicators
             today_high = MarketSeries.High[kindex];
             today_low = MarketSeries.Low[kindex];
 
-            Print("Today High is: {0}", today_high);
-            Print("Today Low is: {0}", today_low);
+            //Print("Today High is: {0}", today_high);
+            //Print("Today Low is: {0}", today_low);
 
-            if (scenario == "GAPUP" && gap_up_mode)
+            if (!is_position_open)
             {
-                Print("Buy and close at {0}", today_high + diffticks);
-            }
-            else if (scenario == "GAPUP" && !gap_up_mode)
-            {
-                Print("Sell and close at {0}", today_low - diffticks);
-            }
-            else if (scenario == "GAPDOWN" && gap_down_mode)
-            {
-                Print("Buy and close at {0}", yesterday_low + diffticks);
-            }
-            else if (scenario == "GAPDOWN" && !gap_down_mode)
-            {
-                Print("Sell and close at {0}", today_low - diffticks);
+                if (scenario == "GAPUP" && gap_up_mode)
+                {
+                    double stoploss_price = ask_price - (ask_price * (long_stop / 100));
+                    double takeprofit_price = today_high + diffticks;
+                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipValue;
+                    double takeprofit_pips = (takeprofit_price - ask_price) / Symbol.PipValue;
+                    Print("Buy at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                    ExecuteMarketOrder(TradeType.Buy, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                    is_position_open = true;
+                }
+                else if (scenario == "GAPUP" && !gap_up_mode)
+                {
+                    double stoploss_price = bid_price + (bid_price * (short_stop / 100));
+                    double takeprofit_price = today_low - diffticks;
+                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipValue;
+                    double takeprofit_pips = (bid_price - takeprofit_price) / Symbol.PipValue;
+                    Print("Sell at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                    ExecuteMarketOrder(TradeType.Sell, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                    is_position_open = true;
+                }
+                else if (scenario == "GAPDOWN" && gap_down_mode)
+                {
+                    double stoploss_price = ask_price - (ask_price * (long_stop / 100));
+                    double takeprofit_price = yesterday_low + diffticks;
+                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipValue;
+                    double takeprofit_pips = (takeprofit_price - ask_price) / Symbol.PipValue;
+                    Print("Buy at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                    ExecuteMarketOrder(TradeType.Buy, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                    is_position_open = true;
+                }
+                else if (scenario == "GAPDOWN" && !gap_down_mode)
+                {
+                    double stoploss_price = bid_price + (bid_price * (short_stop / 100));
+                    double takeprofit_price = today_low - diffticks;
+                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipValue;
+                    double takeprofit_pips = (bid_price - takeprofit_price) / Symbol.PipValue;
+                    Print("Sell at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                    ExecuteMarketOrder(TradeType.Sell, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                    is_position_open = true;
+                }
             }
 
 
@@ -148,6 +178,12 @@ namespace cAlgo.indicators
 
         }
 
+        private void PositionsOnClosed(PositionClosedEventArgs args)
+        {
+            var pos = args.Position;
+            Print("Position closed with €{0} profit", pos.GrossProfit);
+            is_position_open = false;
+        }
 
         protected override void OnStop()
         {
