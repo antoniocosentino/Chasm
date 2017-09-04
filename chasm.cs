@@ -3,7 +3,7 @@
 ///   Description:      cAlgo trading bot
 ///   Author:           Antonio Cosentino
 ///   Version:          1.0
-///   Updated:          29/08/2017
+///   Updated:          05/09/2017
 ///-----------------------------------------------------------------
 
 using System;
@@ -46,7 +46,7 @@ namespace cAlgo.indicators
         [Parameter("SHORT Trailing Stop (%)", DefaultValue = 4, MinValue = 1, MaxValue = 50)]
         public double short_stop { get; set; }
 
-        [Parameter("Diff Ticks", DefaultValue = 1, MinValue = 1E-07, MaxValue = 1000)]
+        [Parameter("Diff Ticks", DefaultValue = 2, MinValue = 1, MaxValue = 1000)]
         public double diffticks { get; set; }
 
         [Parameter("GAP Up Long?", DefaultValue = true)]
@@ -62,7 +62,7 @@ namespace cAlgo.indicators
         {
             is_position_open = false;
             kindex = 0;
-
+            Positions.Closed += PositionsOnClosed;
             Print("Chasm {0} Started", version_number);
             Print("Server time is {0}", Server.Time.AddHours(0));
         }
@@ -74,13 +74,6 @@ namespace cAlgo.indicators
             yesterday_close = MarketSeries.Close[kindex - 1];
             yesterday_high = MarketSeries.High[kindex - 1];
             yesterday_low = MarketSeries.Low[kindex - 1];
-
-
-            //Print("Open price is: {0}", today_open);
-            //Print("Yesterday Close is: {0}", yesterday_close);
-            //Print("Yesterday High is: {0}", yesterday_high);
-            //Print("Yesterday Low is: {0}", yesterday_low);
-
 
             if (today_open > yesterday_close)
             {
@@ -101,10 +94,6 @@ namespace cAlgo.indicators
                 Timer.Start(3600);
             }
 
-
-
-
-
         }
 
         protected override void OnTimer()
@@ -112,9 +101,6 @@ namespace cAlgo.indicators
             Timer.Stop();
             today_high = MarketSeries.High[kindex];
             today_low = MarketSeries.Low[kindex];
-
-            //Print("Today High is: {0}", today_high);
-            //Print("Today Low is: {0}", today_low);
 
             if (!is_position_open)
             {
@@ -159,9 +145,6 @@ namespace cAlgo.indicators
                     is_position_open = true;
                 }
             }
-
-
-            Print("- - -");
         }
 
         protected override void OnTick()
