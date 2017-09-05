@@ -69,6 +69,7 @@ namespace cAlgo.indicators
 
         protected override void OnBar()
         {
+            Print("");
             kindex = MarketSeries.Close.Count - 1;
             today_open = MarketSeries.Open[kindex];
             yesterday_close = MarketSeries.Close[kindex - 1];
@@ -93,7 +94,6 @@ namespace cAlgo.indicators
                 Print("Scenario is: {0}", scenario);
                 Timer.Start(3600);
             }
-
         }
 
         protected override void OnTimer()
@@ -107,9 +107,9 @@ namespace cAlgo.indicators
                 if (scenario == "GAPUP" && gap_up_mode)
                 {
                     double stoploss_price = ask_price - (ask_price * (long_stop / 100));
-                    double takeprofit_price = today_high + diffticks;
-                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipValue;
-                    double takeprofit_pips = (takeprofit_price - ask_price) / Symbol.PipValue;
+                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipSize;
+                    double takeprofit_pips = ((today_high / Symbol.PipSize) + diffticks) - (ask_price / Symbol.PipSize);
+                    double takeprofit_price = ask_price + (takeprofit_pips * Symbol.PipSize);
                     Print("Buy at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
                     ExecuteMarketOrder(TradeType.Buy, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
                     is_position_open = true;
@@ -117,32 +117,40 @@ namespace cAlgo.indicators
                 else if (scenario == "GAPUP" && !gap_up_mode)
                 {
                     double stoploss_price = bid_price + (bid_price * (short_stop / 100));
-                    double takeprofit_price = today_low - diffticks;
-                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipValue;
-                    double takeprofit_pips = (bid_price - takeprofit_price) / Symbol.PipValue;
-                    Print("Sell at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
-                    ExecuteMarketOrder(TradeType.Sell, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
-                    is_position_open = true;
+                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipSize;
+                    double takeprofit_pips = (bid_price / Symbol.PipSize) - ((today_low / Symbol.PipSize) - diffticks);
+                    double takeprofit_price = bid_price - (takeprofit_pips * Symbol.PipSize);
+                    if (takeprofit_price < bid_price)
+                    {
+                        Print("Sell at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                        ExecuteMarketOrder(TradeType.Sell, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                        is_position_open = true;
+                    }
                 }
                 else if (scenario == "GAPDOWN" && gap_down_mode)
                 {
                     double stoploss_price = ask_price - (ask_price * (long_stop / 100));
-                    double takeprofit_price = yesterday_low + diffticks;
-                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipValue;
-                    double takeprofit_pips = (takeprofit_price - ask_price) / Symbol.PipValue;
-                    Print("Buy at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
-                    ExecuteMarketOrder(TradeType.Buy, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
-                    is_position_open = true;
+                    double stoploss_pips = (ask_price - stoploss_price) / Symbol.PipSize;
+                    //double takeprofit_pips = ((yesterday_low / Symbol.PipSize) + diffticks) - (ask_price / Symbol.PipSize); // trying instead with today low
+                    double takeprofit_pips = ((today_low / Symbol.PipSize) + diffticks) - (ask_price / Symbol.PipSize);
+                    double takeprofit_price = ask_price + (takeprofit_pips * Symbol.PipSize);
+                    if (takeprofit_price > ask_price)
+                    {
+                        Print("Buy at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
+                        ExecuteMarketOrder(TradeType.Buy, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
+                        is_position_open = true;
+                    }
                 }
                 else if (scenario == "GAPDOWN" && !gap_down_mode)
                 {
                     double stoploss_price = bid_price + (bid_price * (short_stop / 100));
-                    double takeprofit_price = today_low - diffticks;
-                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipValue;
-                    double takeprofit_pips = (bid_price - takeprofit_price) / Symbol.PipValue;
+                    double stoploss_pips = (stoploss_price - bid_price) / Symbol.PipSize;
+                    double takeprofit_pips = (bid_price / Symbol.PipSize) - ((today_low / Symbol.PipSize) - diffticks);
+                    double takeprofit_price = bid_price - (takeprofit_pips * Symbol.PipSize);
                     Print("Sell at {0} with {1} takeprofit and {2} stop loss", ask_price, takeprofit_price, stoploss_price);
                     ExecuteMarketOrder(TradeType.Sell, Symbol, ncontracts, "Chasm", stoploss_pips, takeprofit_pips);
                     is_position_open = true;
+
                 }
             }
         }
