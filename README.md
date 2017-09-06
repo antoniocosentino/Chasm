@@ -9,7 +9,7 @@ The BOT accepts 6 parameters:
 - Diff ticks: Take profit ticks (default: 2)
 - GAP UP Long: if Yes, GAP UP position will trigger a Long position. If no, Short (default: Yes)
 - GAP DOWN Long: if Yes, GAP DOWN position will trigger a Long position. If no, Short (default: No)
-- N. Contracts: n. of contracts to Buy/Sell
+- N.Contracts: Number of contracts to Buy/Sell
 
 ### Bot Logic
 (work in progress)
