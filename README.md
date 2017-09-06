@@ -6,4 +6,5 @@ A cAlgo bot experiment, using Gap Trading Strategies
 description WIP
 
 ## Backtesting Screenshot
-![screenshot](https://github.com/antoniocosentino/Chasm/master/screen.jpg "Backtesting Screenshot")
+![Backtesting Screenshot](https://github.com/antoniocosentino/Chasm/blob/master/screen.jpg)
+
