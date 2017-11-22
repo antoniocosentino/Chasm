@@ -16,16 +16,16 @@ The bot is checking for the closing price of previous day and comparing it with 
 
 If the BOT detects a GAP it will behave according to the configuration:
 
-### GAP UP + Long
+#### GAP UP + Long
 One hour after the market's opening time, it will open a LONG position and set a take profit calculated on the value of the Diff Ticks parameter, added to the max price reached today.
 
-### GAP UP + Short
+#### GAP UP + Short
 One hour after the market's opening time, it will open a SHORT position and set a take profit calculated on the value of the Diff Ticks parameter, subtracted from the min price reached today.
 
-### GAP DOWN + Long
+#### GAP DOWN + Long
 One hour after the market's opening time, it will open a LONG position and set a take profit calculated on the value of the Diff Ticks parameter, applied to the min price reached today.
 
-### GAP DOWN + Short
+#### GAP DOWN + Short
 One hour after the market's opening time, it will open a SHORT position and set a take profit calculated on the value of the Diff Ticks parameter, subtracted from the min price reached today.
 
 
